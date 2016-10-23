@@ -17,11 +17,12 @@ double f (double x);
 int main()
 {
 
-	struct interval
+	class interval
 	{
-		double start;
-		double end;
-		double max;
+		public:
+			double start;
+			double end;
+			double max;
 	};
 	
 	queue <interval> works;

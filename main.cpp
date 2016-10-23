@@ -6,13 +6,11 @@
 #define a 1.0
 #define b 100.0
 #define s 12
-#define e 1.0e(-10)
+#define e 1.0e(-6)
 
 using namespace std;
 
 double f (double x);
-
-
 
 int main()
 {
@@ -23,7 +21,9 @@ int main()
 		double end;
 		double max;
 	};
+	
 	queue <interval> works;
+	
 	double fa = f(a);
 	double fb = f(b);
 	double max = fa>fb? fa:fb;
@@ -39,12 +39,15 @@ int main()
 	
 	double interval_length;
 	
-	while 
+	//manager to generate works 
+	//breadth first search
+	while (interval_length>1.0e(-2))
 	{
 		interval old = works.pop();
 		double fstart = f(old.start);
 		double fmid = f((old.end+old.start)/2);
 		double fend = f(old.end);
+		
 		if (fstart + fmid + s*(end-start)/4>old.max)
 		{
 			interval new1(old.start, (old.end+old.start)/2, fstart > fmid? fstart : fmid);
@@ -57,10 +60,14 @@ int main()
 			works.push(new2);
 		}
 		
-		interval_max new_interval(start,end,max);
-		works.push(new_interval);
+		interval_lenth = (old.end - old.start)/2;
 		
 	}
+	
+	//parallel part
+	//send works to workers
+	//each worker use a depth first search
+	
 	return 0;
 }
 

@@ -19,7 +19,7 @@ class interval
 		double start;
 		double end;
 		double max;
-		interval (double S, double E, double M){start = S; end = E; max = M;}
+		interval (double S=0, double E=0, double M=0){start = S; end = E; max = M;}
 };
 	
 int main()
@@ -84,7 +84,7 @@ int main()
 			
 			while (interval_length>=1.0e-6)
 			{
-				interval old = work.back();
+				interval old = work.top();
 				work.pop();
 				double fstart = f(old.start);
 				double fmid = f((old.end+old.start)/2);
@@ -107,11 +107,11 @@ int main()
 			
 			int count = work.size();
 			
-			double max_num = work.back().max;
+			double max_num = work.top().max;
 			work.pop();
 			for (int j=0; j<count; j++)
 			{
-				double temp = work.back().max;
+				double temp = work.top().max;
 				work.pop();
 				if (temp > max_num)
 				{

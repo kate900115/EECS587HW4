@@ -66,11 +66,13 @@ int main()
 	//each worker use a depth first search
 	int num_works = queue.size();
 	
-	for (int i=0; i<number_works; i++)
+	#pragma omp parallel
 	{
-		
+		for (int i=0; i<number_works; i++)
+		{
+					
+		}
 	}
-	
 	return 0;
 }
 

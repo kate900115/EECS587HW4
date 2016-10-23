@@ -36,20 +36,20 @@ int main()
 	
 	//manager to generate works 
 	//breadth first search
-	while (interval_length>1.0e(-2))
+	while (interval_length>1.0e-2)
 	{
 		interval old = works.pop();
 		double fstart = f(old.start);
 		double fmid = f((old.end+old.start)/2);
 		double fend = f(old.end);
 		
-		if (fstart + fmid + s*(end-start)/4>old.max)
+		if (fstart + fmid + s*(old.end-old.start)/4>old.max)
 		{
 			interval new1(old.start, (old.end+old.start)/2, fstart > fmid? fstart : fmid);
 			works.push(new1);
 		}
 		
-		if (fmid + fend + s*(end-start)/4>old.max)
+		if (fmid + fend + s*(old.end-old.start)/4>old.max)
 		{
 			interval new2((old.end+old.start)/2, old.end, fmid > fend? fmid : fend);
 			works.push(new2);
@@ -62,7 +62,7 @@ int main()
 	//parallel part
 	//send works to workers
 	//each worker use a depth first search
-	int num_works = queue.size();
+	int num_works = works.size();
 	
 	#pragma omp parallel num threads(thread_num)
 	{
@@ -76,20 +76,20 @@ int main()
 			
 			work.push(thread_work);
 			
-			while (interval_length>=1.0e(-6))
+			while (interval_length>=1.0e-6)
 			{
 				interval old = work.pop();
 				double fstart = f(old.start);
 				double fmid = f((old.end+old.start)/2);
 				double fend = f(old.end);
 				
-				if (fstart + fmid + s*(end-start)/4>old.max)
+				if (fstart + fmid + s*(old.end-old.start)/4>old.max)
 				{
 					interval new1(old.start, (old.end+old.start)/2, fstart > fmid? fstart : fmid);
 					work.push(new1);
 				}
 		
-				if (fmid + fend + s*(end-start)/4>old.max)
+				if (fmid + fend + s*(old.end-old.start)/4>old.max)
 				{
 					interval new2((old.end+old.start)/2, old.end, fmid > fend? fmid : fend);
 					work.push(new2);

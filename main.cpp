@@ -67,7 +67,7 @@ int main()
 	//each worker use a depth first search
 	int num_works = works.size();
 	
-	#pragma omp parallel num threads(thread_num)
+	#pragma omp parallel num_threads(thread_num)
 	{
 		#pragma omp for schedule(dynamic, 1)
 		for (int i=0; i<num_works; i++)

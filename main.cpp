@@ -2,11 +2,13 @@
 #include <cmath>
 #include <omp.h>
 #include <queue>
+#include <stack>
 
 #define a 1.0
 #define b 100.0
 #define s 12
 #define e 1.0e(-6)
+#define thread_num 56
 
 using namespace std;
 
@@ -23,19 +25,14 @@ int main()
 	};
 	
 	queue <interval> works;
+	stack <interval> work;
+	
 	
 	double fa = f(a);
 	double fb = f(b);
 	double max = fa>fb? fa:fb;
 	interval setup(a, b, max);
 	works.push(setup);
-	
-	double start1;
-	double end1;
-	double max1;
-	double start2;
-	double end2;
-	double max2;
 	
 	double interval_length;
 	
@@ -67,6 +64,12 @@ int main()
 	//parallel part
 	//send works to workers
 	//each worker use a depth first search
+	int num_works = queue.size();
+	
+	for (int i=0; i<number_works; i++)
+	{
+		
+	}
 	
 	return 0;
 }

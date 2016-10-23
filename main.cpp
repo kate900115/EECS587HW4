@@ -25,8 +25,6 @@ int main()
 	};
 	
 	queue <interval> works;
-	stack <interval> work;
-	
 	
 	double fa = f(a);
 	double fb = f(b);
@@ -34,7 +32,7 @@ int main()
 	interval setup(a, b, max);
 	works.push(setup);
 	
-	double interval_length;
+	double interval_length = b - a;
 	
 	//manager to generate works 
 	//breadth first search
@@ -57,7 +55,7 @@ int main()
 			works.push(new2);
 		}
 		
-		interval_lenth = (old.end - old.start)/2;
+		interval_length = (old.end - old.start)/2;
 		
 	}
 	
@@ -66,13 +64,60 @@ int main()
 	//each worker use a depth first search
 	int num_works = queue.size();
 	
-	#pragma omp parallel
+	#pragma omp parallel num threads(thread_num)
 	{
+		#pragma omp for schedule (dynamic, 1)
 		for (int i=0; i<number_works; i++)
 		{
-					
+			stack <interval> work;
+			
+			#pragma omp critical(thread_lock)
+			interval thread_work = works.pop();
+			
+			work.push(thread_work);
+			
+			while (interval_length>=1.0e(-6))
+			{
+				interval old = work.pop();
+				double fstart = f(old.start);
+				double fmid = f((old.end+old.start)/2);
+				double fend = f(old.end);
+				
+				if (fstart + fmid + s*(end-start)/4>old.max)
+				{
+					interval new1(old.start, (old.end+old.start)/2, fstart > fmid? fstart : fmid);
+					work.push(new1);
+				}
+		
+				if (fmid + fend + s*(end-start)/4>old.max)
+				{
+					interval new2((old.end+old.start)/2, old.end, fmid > fend? fmid : fend);
+					work.push(new2);
+				}	
+				
+				interval_length = (old.end - old.start)/2;
+			}	
+			
+			int count = work.size();
+			
+			double max_num = work.pop().max;
+			for (int j=0; j<count; j++)
+			{
+				double temp = work.pop().max;
+				if (temp > max_num)
+				{
+					max_num = temp;
+				}
+			}
+			
+			thread_work.max = max_num;
+			
+			#pragma omp critical(thread_lock)
+			works.push(thread_work);	
 		}
 	}
+	
+	
 	return 0;
 }
 

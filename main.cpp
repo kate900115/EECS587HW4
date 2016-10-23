@@ -7,24 +7,25 @@
 #define a 1.0
 #define b 100.0
 #define s 12
-#define e 1.0e(-6)
+#define e 1.0e-6
 #define thread_num 56
 
 using namespace std;
 
 double f (double x);
-
+class interval
+{
+	public:
+		double start;
+		double end;
+		double max;
+		interval (double S, double E, double M){start = S; end = E; max = M;}
+};
+	
 int main()
 {
 
-	class interval
-	{
-		public:
-			double start;
-			double end;
-			double max;
-	};
-	
+
 	queue <interval> works;
 	
 	double fa = f(a);

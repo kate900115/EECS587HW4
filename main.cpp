@@ -40,7 +40,8 @@ int main()
 	//breadth first search
 	while (interval_length>1.0e-2)
 	{
-		interval old = works.pop();
+		interval old = works.front();
+		works.pop();
 		double fstart = f(old.start);
 		double fmid = f((old.end+old.start)/2);
 		double fend = f(old.end);
@@ -74,8 +75,10 @@ int main()
 			stack <interval> work;
 			
 			#pragma omp critical(thread_lock)
-			interval thread_work = works.pop();
-			
+			{
+				interval thread_work = works.front();
+				works.pop();
+			}
 			work.push(thread_work);
 			
 			while (interval_length>=1.0e-6)

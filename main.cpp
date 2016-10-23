@@ -70,20 +70,22 @@ int main()
 	#pragma omp parallel num threads(thread_num)
 	{
 		#pragma omp for schedule(dynamic, 1)
-		for (int i=0; i<number_works; i++)
+		for (int i=0; i<num_works; i++)
 		{
 			stack <interval> work;
-			
+			interval thread_work;
+				
 			#pragma omp critical(thread_lock)
 			{
-				interval thread_work = works.front();
+				thread_work = works.front();
 				works.pop();
 			}
 			work.push(thread_work);
 			
 			while (interval_length>=1.0e-6)
 			{
-				interval old = work.pop();
+				interval old = work.back();
+				work.pop();
 				double fstart = f(old.start);
 				double fmid = f((old.end+old.start)/2);
 				double fend = f(old.end);
@@ -105,10 +107,12 @@ int main()
 			
 			int count = work.size();
 			
-			double max_num = work.pop().max;
+			double max_num = work.back().max;
+			work.pop();
 			for (int j=0; j<count; j++)
 			{
-				double temp = work.pop().max;
+				double temp = work.back().max;
+				work.pop();
 				if (temp > max_num)
 				{
 					max_num = temp;

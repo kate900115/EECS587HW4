@@ -66,7 +66,7 @@ int main()
 	
 	#pragma omp parallel num threads(thread_num)
 	{
-		#pragma omp for schedule (dynamic, 1)
+		#pragma omp for schedule(dynamic, 1)
 		for (int i=0; i<number_works; i++)
 		{
 			stack <interval> work;

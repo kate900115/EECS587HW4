@@ -43,7 +43,7 @@ int main()
 	
 	//manager to generate works 
 	//breadth first search
-	while (interval_length>1.0e-2)
+	while (interval_length>1.0e-3)
 	{
 		interval old = works.front();
 		works.pop();
@@ -80,9 +80,9 @@ int main()
 		#pragma omp for schedule(dynamic, 1)
 		for (int i=0; i<num_works; i++)
 		{
-			int threadID = omp_get_thread_num();
-			#pragma omp critical(cout)
-			cout<<"Thread ID = "<<threadID<<endl;
+			//int threadID = omp_get_thread_num();
+			//#pragma omp critical(cout)
+			//cout<<"Thread ID = "<<threadID<<endl;
 
 			stack <interval> work;
 			interval thread_work;
@@ -100,12 +100,12 @@ int main()
 			while (work.size())
 			{
 				number++;//for test
-				#pragma omp critical(cout)
-				cout<<"threadID = "<<threadID<<", loop times = "<<number<<endl;
+				//#pragma omp critical(cout)
+				//cout<<"threadID = "<<threadID<<", loop times = "<<number<<endl;
 				
 				interval old = work.top();
 				work.pop();
-				if (old.end-old.start>=2.0e-6)
+				if (old.end-old.start>=1.0e-6)
 				{
 					double fstart = old.f_start;
 					double fend = old.f_end;
@@ -142,8 +142,14 @@ int main()
 				}		
 			}
 			
-			#pragma omp critical(vector_lock)
-			max_array.push_back(max_num);
+			if (max_num!=max)
+			{
+				#pragma omp critical(vector_lock)
+				{
+					cout<<"temp max = "<<max_num<<endl;
+					max_array.push_back(max_num);
+				}
+			}
 			//works.push(thread_work);	
 		}		
 	}

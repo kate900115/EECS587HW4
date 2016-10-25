@@ -21,7 +21,7 @@ class interval
 		double end;
 		double f_start;
 		double f_end;
-		interval (double S=0, double E=0, double FS=0; double FE=0;){start = S; end = E; f_start = FS; f_end = FE;}
+		interval (double S=0, double E=0, double FS=0, double FE=0){start = S; end = E; f_start = FS; f_end = FE;}
 };
 	
 int main()
@@ -31,6 +31,9 @@ int main()
 	
 	double fa = f(a);
 	double fb = f(b);
+	
+	cout<<"f(a)="<<fa<<",f(b)="<<fb<<endl;
+	
 	interval setup(a, b, fa, fb);
 	works.push(setup);
 	
@@ -40,7 +43,7 @@ int main()
 	
 	//manager to generate works 
 	//breadth first search
-	while (interval_length>1.0e-1)
+	while (interval_length>1.0e-2)
 	{
 		interval old = works.front();
 		works.pop();
@@ -78,13 +81,14 @@ int main()
 		for (int i=0; i<num_works; i++)
 		{
 			int threadID = omp_get_thread_num();
-			//#pragma omp critical(cout)
-			//cout<<"Thread ID = "<<threadID<<endl;
+			#pragma omp critical(cout)
+			cout<<"Thread ID = "<<threadID<<endl;
 
 			stack <interval> work;
 			interval thread_work;
 			double max_num = max;
-	
+
+			//get the job from manager
 			#pragma omp critical(thread_lock)
 			{
 				thread_work = works.front();
@@ -93,16 +97,16 @@ int main()
 			work.push(thread_work);
 			
 			int number=0;//for test
-			while (!work.size())
+			while (work.size())
 			{
 				number++;//for test
-				//#pragma omp critical(cout)
-				//cout<<"threadID = "<<threadID<<", loop times = "<<number<<endl;
-			
-				if (interval_length>=2.0e-6)
+				#pragma omp critical(cout)
+				cout<<"threadID = "<<threadID<<", loop times = "<<number<<endl;
+				
+				interval old = work.top();
+				work.pop();
+				if (old.end-old.start>=2.0e-6)
 				{
-					interval old = work.top();
-					work.pop();
 					double fstart = old.f_start;
 					double fend = old.f_end;
 					double fmid = f((old.end+old.start)/2);
@@ -130,8 +134,6 @@ int main()
 				}
 				else
 				{
-					interval old = work.top();
-					work.pop();
 					double max_temp = old.f_start > old.f_end ? old.f_start : old.f_end;
 					if (max_num < max_temp)
 					{
@@ -143,9 +145,23 @@ int main()
 			#pragma omp critical(vector_lock)
 			max_array.push_back(max_num);
 			//works.push(thread_work);	
+		}		
+	}
+	
+	int size = max_array.size();
+	double init_max = max_array.back();
+	max_array.pop_back();
+	for (int i=0; i<size-1; i++)
+	{
+		double temp = max_array.back();
+		max_array.pop_back();
+		if (temp>init_max)
+		{
+			init_max = temp;
 		}
 	}
 	
+	cout<<"the max number = "<<init_max<<endl;
 	
 	return 0;
 }

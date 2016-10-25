@@ -8,7 +8,7 @@
 #define a 1.0
 #define b 100.0
 #define s 12
-#define e 1.0e-6
+#define E 1.0e-6
 #define thread_num 56
 
 using namespace std;
@@ -21,7 +21,7 @@ class interval
 		double end;
 		double f_start;
 		double f_end;
-		interval (double S=0, double E=0, double FS=0, double FE=0){start = S; end = E; f_start = FS; f_end = FE;}
+		interval (double S=0, double EE=0, double FS=0, double FE=0){start = S; end = EE; f_start = FS; f_end = FE;}
 };
 	
 int main()
@@ -43,35 +43,39 @@ int main()
 	
 	//manager to generate works 
 	//breadth first search
-	while (interval_length>1.0e-3)
+	while (interval_length>1.0e-1)
 	{
 		interval old = works.front();
 		works.pop();
 		double fstart = old.f_start;
 		double fend = old.f_end;
 		double fmid = f((old.end+old.start)/2);
-
 		
-		if (fstart + fmid + s*(old.end-old.start)/4>(old.f_start>old.f_end?old.f_start:old.f_end))
+		double max3 = fstart > fmid? fstart: fmid;
+		max3 = max3 > fend ? max3 : fend;
+		max = max3 > max? max3 : max;
+		
+		if ((fstart + fmid)/2 + s*(old.end-old.start)/4>=max+E)
 		{
 			interval new1(old.start, (old.end+old.start)/2, fstart, fmid);
 			works.push(new1);
 		}
 		
-		if (fmid + fend + s*(old.end-old.start)/4>(old.f_start>old.f_end?old.f_start:old.f_end))
+		if ((fmid + fend)/2 + s*(old.end-old.start)/4>=max+E)
 		{
 			interval new2((old.end+old.start)/2, old.end, fmid, fend);
 			works.push(new2);
 		}
 		
 		interval_length = (old.end - old.start)/2;
-		
 	}
 	cout<<"manager done!!"<<endl;	
+	cout<<"max = "<<max<<endl;
 	//parallel part
 	//send works to workers
 	//each worker use a depth first search
 	int num_works = works.size();
+	
 	
 	cout<<"work size = "<<num_works<<endl;
 	
@@ -80,13 +84,12 @@ int main()
 		#pragma omp for schedule(dynamic, 1)
 		for (int i=0; i<num_works; i++)
 		{
-			//int threadID = omp_get_thread_num();
+			int threadID = omp_get_thread_num();
 			//#pragma omp critical(cout)
 			//cout<<"Thread ID = "<<threadID<<endl;
 
 			stack <interval> work;
 			interval thread_work;
-			double max_num = max;
 
 			//get the job from manager
 			#pragma omp critical(thread_lock)
@@ -95,79 +98,57 @@ int main()
 				works.pop();
 			}
 			work.push(thread_work);
-			
+
 			int number=0;//for test
 			while (work.size())
 			{
 				number++;//for test
-				//#pragma omp critical(cout)
-				//cout<<"threadID = "<<threadID<<", loop times = "<<number<<endl;
+				#pragma omp critical(cout)
+				cout<<"threadID = "<<threadID<<", loop times = "<<number<<endl;
 				
 				interval old = work.top();
 				work.pop();
-				if (old.end-old.start>=1.0e-6)
-				{
-					double fstart = old.f_start;
-					double fend = old.f_end;
-					double fmid = f((old.end+old.start)/2);
+				double fstart = old.f_start;
+				double fend = old.f_end;
+				double fmid = f((old.end+old.start)/2);
 
-					//#pragma omp critical(cout)
-					//cout<<"threadID = "<<threadID<<"aaaaaaaaaaaaaa"<<endl;
-				
-					if (fstart + fmid + s*(old.end-old.start)/4>(old.f_start>old.f_end?old.f_start:old.f_end))
-					{
-						interval new1(old.start, (old.end+old.start)/2, fstart, fmid);
-						work.push(new1);
-					}
-			
-					if (fmid + fend + s*(old.end-old.start)/4>(old.f_start>old.f_end?old.f_start:old.f_end))
-					{
-						interval new2((old.end+old.start)/2, old.end, fmid, fend);
-						work.push(new2);
-					}	
-				
-					if (work.size()==0)
-					{
-						break;
-					}
-					interval_length = (old.end - old.start)/2;
-				}
-				else
+				//#pragma omp critical(cout)
+				//cout<<"threadID = "<<threadID<<"aaaaaaaaaaaaaa"<<endl;
+				double max3 = fstart>fmid? fstart : fmid;
+				       max3 = max3>fend? max3 : fend;
+				#pragma omp critical(update_max)
 				{
-					double max_temp = old.f_start > old.f_end ? old.f_start : old.f_end;
-					if (max_num < max_temp)
+					if (max3>max)
 					{
-						max_num = max_temp;
-					}					
-				}		
+						max = max3;
+					}
+				}
+					
+				if ((fstart + fmid)/2 + s*(old.end-old.start)/4>= max+E)
+				{
+					interval new1(old.start, (old.end+old.start)/2, fstart, fmid);
+					work.push(new1);
+				}
+			
+				if ((fmid + fend)/2 + s*(old.end-old.start)/4>= max+E)
+				{
+					interval new2((old.end+old.start)/2, old.end, fmid, fend);
+					work.push(new2);
+				}	
+				//interval_length = (old.end - old.start)/2;
 			}
 			
-			if (max_num!=max)
-			{
-				#pragma omp critical(vector_lock)
-				{
-					cout<<"temp max = "<<max_num<<endl;
-					max_array.push_back(max_num);
-				}
-			}
-			//works.push(thread_work);	
-		}		
-	}
-	
-	int size = max_array.size();
-	double init_max = max_array.back();
-	max_array.pop_back();
-	for (int i=0; i<size-1; i++)
-	{
-		double temp = max_array.back();
-		max_array.pop_back();
-		if (temp>init_max)
-		{
-			init_max = temp;
+			#pragma omp critical (cout)
+			cout<<"temp max = "<<max<<endl;	
+			//works.push(thread_work);		
 		}
-	}
+		
+		
+	}		
 	
-	cout<<"the max number = "<<init_max<<endl;
+
+	
+	cout<<"the max number = "<<max<<endl;
 	
 	return 0;
 }

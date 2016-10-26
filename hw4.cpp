@@ -3,7 +3,6 @@
 #include <omp.h>
 #include <queue>
 #include <stack>
-#include <vector>
 
 #define a 1.0
 #define b 100.0
@@ -27,12 +26,11 @@ class interval
 int main()
 {
 	queue <interval> works;
-	vector <double> max_array;
-	
+	double begin_time = omp_get_wtime();
 	double fa = f(a);
 	double fb = f(b);
 	
-	cout<<"f(a)="<<fa<<",f(b)="<<fb<<endl;
+	//cout<<"f(a)="<<fa<<",f(b)="<<fb<<endl;
 	
 	interval setup(a, b, fa, fb);
 	works.push(setup);
@@ -43,7 +41,7 @@ int main()
 	
 	//manager to generate works 
 	//breadth first search
-	while (interval_length>1.0e-1)
+	while (interval_length>1.0e-3)
 	{
 		interval old = works.front();
 		works.pop();
@@ -69,16 +67,13 @@ int main()
 		
 		interval_length = (old.end - old.start)/2;
 	}
-	cout<<"manager done!!"<<endl;	
-	cout<<"max = "<<max<<endl;
+	//cout<<"max = "<<max<<endl;
 	//parallel part
 	//send works to workers
 	//each worker use a depth first search
 	int num_works = works.size();
 	
-	
 	cout<<"work size = "<<num_works<<endl;
-	
 	#pragma omp parallel num_threads(thread_num)
 	{
 		#pragma omp for schedule(dynamic, 1)
@@ -103,8 +98,8 @@ int main()
 			while (work.size())
 			{
 				number++;//for test
-				#pragma omp critical(cout)
-				cout<<"threadID = "<<threadID<<", loop times = "<<number<<endl;
+				//#pragma omp critical(cout)
+				//cout<<"threadID = "<<threadID<<", loop times = "<<number<<endl;
 				
 				interval old = work.top();
 				work.pop();
@@ -138,33 +133,33 @@ int main()
 				//interval_length = (old.end - old.start)/2;
 			}
 			
-			#pragma omp critical (cout)
-			cout<<"temp max = "<<max<<endl;	
+			//#pragma omp critical (cout)
+			//cout<<"temp max = "<<max<<endl;	
 			//works.push(thread_work);		
 		}
 		
 		
 	}		
-	
+	double end_time = omp_get_wtime();
 
-	
 	cout<<"the max number = "<<max<<endl;
-	
+	cout<<"elapse time = "<<end_time - begin_time<<endl;           
 	return 0;
 }
 
 //should not change
 double f(double x)
 {
-	double sumj=0;
 	double sumi=0;
 	for (int i=1; i<101; i++)
 	{
+		double sumj=0;
+	
 		for (int j=1; j<i+1; j++)
 		{
 			sumj = sumj + pow((x+0.5*j), -3.3);	
 		}	
-		sumi = sumi + sin(sumj)/(pow(1.3,i));
+		sumi = sumi + sin(sumj+x)/(pow(1.3,i));
 	}
 
 	return sumi;
